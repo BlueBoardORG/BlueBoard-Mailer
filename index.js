@@ -6,7 +6,7 @@ const config = require("./config");
 dotenv.config();
 
 MongoClient.connect(process.env.MONGODB_URL).then(async client => {
-
+    const messages = [];
     const { host, port, auth, secure } = await config();
 
     const transport = nodemailer.createTransport({
@@ -29,7 +29,29 @@ MongoClient.connect(process.env.MONGODB_URL).then(async client => {
 
             let notifCursor = notifications.watch();
 
-            const { subject, appUrl, language } = await config();
+            const { subject, appUrl, language, amountMessages } = await config();
+
+            const sendMail = mailOptions => {
+                transport.sendMail(mailOptions, (error, info) => {
+                    if (error) {
+                        return console.error(error);
+                    }
+                    console.log('Message sent: %s', info.messageId);
+                });
+            }
+
+            const sendAmountOfMails = amount => {
+                let count = Math.min(amount, messages.length);
+                for(let i =0; i<count; i++){
+                    const options = messages.pop();
+                    sendMail(options);
+                }
+                if(messages.length > 0)
+                    console.log(`${messages.length} messages left in Queue`);
+            }
+
+            // set amount of mails to send over one minute
+            setInterval(()=>sendAmountOfMails(amountMessages), 60000);
 
             notifCursor.on("change", async ({ fullDocument }) => {
                 if (fullDocument) {
@@ -44,12 +66,7 @@ MongoClient.connect(process.env.MONGODB_URL).then(async client => {
                             html: createHTMLMessage(language, from, title, action, boardId, appUrl)
                         };
 
-                        transport.sendMail(mailOptions, (error, info) => {
-                            if (error) {
-                                return console.error(error);
-                            }
-                            console.log('Message sent: %s', info.messageId);
-                        });
+                        messages.push(mailOptions);
                     }
                 }
             });

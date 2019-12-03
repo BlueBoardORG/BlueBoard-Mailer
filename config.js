@@ -15,6 +15,7 @@ module.exports = async () => {
         },
         subject: process.env.MAIL_SUBJECT || 'Notification Mail From BlueBoard',
         language: process.env.MAIL_LANGUAGE || 'hebrew',
-        appUrl: process.env.APP_URL || 'http://localhost:1337'
+        appUrl: process.env.APP_URL || 'http://localhost:1337',
+        amountMessages: process.env.AMOUNT_MESSAGES || '5'
     }
 }
