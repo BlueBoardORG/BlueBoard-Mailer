@@ -5,6 +5,9 @@ const config = require("./config");
 
 dotenv.config();
 
+
+
+
 MongoClient.connect(process.env.MONGODB_URL).then(async client => {
     const messages = [];
     const { host, port, auth, secure } = await config();
@@ -37,14 +40,41 @@ MongoClient.connect(process.env.MONGODB_URL).then(async client => {
                         return console.error(error);
                     }
                     console.log('Message sent: %s', info.messageId);
+                    if(process.env.NODE_ENV != 'production')
+                        console.log('Preview URL: ' + nodemailer.getTestMessageUrl(info));
                 });
+            }
+
+            const concatHTMLMessages = (htmlMessages) => {
+                let finalHtml = '';
+                for (let i=0; i< htmlMessages.length; i++){
+                    finalHtml += htmlMessages[i] + '<br>';
+                }
+                return finalHtml;
             }
 
             const sendAmountOfMails = amount => {
                 let count = Math.min(amount, messages.length);
                 for(let i =0; i<count; i++){
-                    const options = messages.pop();
-                    sendMail(options);
+                    const option = messages.pop();
+                    const {to, from, subject} = option;
+                    const allOptions = [option];
+                    let messageArray = [option];
+                    while(messageArray.length > 0){
+                        messageArray = messages.splice(messages.findIndex(message => message.to === to), 1);
+                        allOptions.concat(...messageArray);
+                    }
+
+                    const htmlMessages = allOptions.map(option => option.html);
+
+                    const finalOption = {
+                        to,
+                        from,
+                        subject,
+                        html: concatHTMLMessages(htmlMessages)
+                    }
+
+                    sendMail(finalOption);
                 }
                 if(messages.length > 0)
                     console.log(`${messages.length} messages left in Queue`);
@@ -113,6 +143,9 @@ const englishHtmlMessage = (from, title, action, boardId, appUrl) => {
         <p> ${from} did the following change: ${action} </p>
         <br>
         <a href="${appUrl}/b/${boardId}"> Link to Board </a>
+    </html>
+    <html>
+    <div> asdasdasd </div>
     </html>
     `;
 }
