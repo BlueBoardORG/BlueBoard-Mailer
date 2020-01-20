@@ -40,14 +40,14 @@ MongoClient.connect(process.env.MONGODB_URL).then(async client => {
                         return console.error(error);
                     }
                     console.log('Message sent: %s', info.messageId);
-                    if(process.env.NODE_ENV != 'production')
+                    if (process.env.NODE_ENV != 'production')
                         console.log('Preview URL: ' + nodemailer.getTestMessageUrl(info));
                 });
             }
 
             const concatHTMLMessages = (htmlMessages) => {
                 let finalHtml = '';
-                for (let i=0; i< htmlMessages.length; i++){
+                for (let i = 0; i < htmlMessages.length; i++) {
                     finalHtml += htmlMessages[i] + '<br>';
                 }
                 return finalHtml;
@@ -55,12 +55,12 @@ MongoClient.connect(process.env.MONGODB_URL).then(async client => {
 
             const sendAmountOfMails = amount => {
                 let count = Math.min(amount, messages.length);
-                for(let i =0; i<count; i++){
+                for (let i = 0; i < count; i++) {
                     const option = messages.pop();
-                    const {to, from, subject} = option;
+                    const { to, from, subject } = option;
                     const allOptions = [option];
-                    let messageArray = [option];
-                    while(messageArray.length > 0){
+                    let messageArray = [];
+                    while (messageArray.length > 0) {
                         messageArray = messages.splice(messages.findIndex(message => message.to === to), 1);
                         allOptions.concat(...messageArray);
                     }
@@ -76,12 +76,12 @@ MongoClient.connect(process.env.MONGODB_URL).then(async client => {
 
                     sendMail(finalOption);
                 }
-                if(messages.length > 0)
+                if (messages.length > 0)
                     console.log(`${messages.length} messages left in Queue`);
             }
 
             // set amount of mails to send over one minute
-            setInterval(()=>sendAmountOfMails(amountMessages), 60000);
+            setInterval(() => sendAmountOfMails(amountMessages), 60000);
 
             notifCursor.on("change", async ({ fullDocument }) => {
                 if (fullDocument) {
@@ -143,9 +143,6 @@ const englishHtmlMessage = (from, title, action, boardId, appUrl) => {
         <p> ${from} did the following change: ${action} </p>
         <br>
         <a href="${appUrl}/b/${boardId}"> Link to Board </a>
-    </html>
-    <html>
-    <div> asdasdasd </div>
     </html>
     `;
 }
