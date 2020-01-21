@@ -46,11 +46,11 @@ MongoClient.connect(process.env.MONGODB_URL).then(async client => {
             }
 
             const concatHTMLMessages = (htmlMessages) => {
-                let finalHtml = '';
+                let finalHtml = '<html> <div dir="rtl">  <h2>  שלום רב! </h2> <br> <b> התזכורות הבאות נוצרו לך במערכת AmanBoard </b> <hr> <br>';
                 for (let i = 0; i < htmlMessages.length; i++) {
-                    finalHtml += htmlMessages[i] + '<br>';
+                    finalHtml += htmlMessages[i] + '<br><hr><br>';
                 }
-                return finalHtml;
+                return finalHtml + '</html>';
             }
 
             const sendAmountOfMails = amount => {
@@ -59,10 +59,10 @@ MongoClient.connect(process.env.MONGODB_URL).then(async client => {
                     const option = messages.pop();
                     const { to, from, subject } = option;
                     const allOptions = [option];
-                    let messageArray = [];
+                    let messageArray = [option];
                     while (messageArray.length > 0) {
                         messageArray = messages.splice(messages.findIndex(message => message.to === to), 1);
-                        allOptions.concat(...messageArray);
+                        allOptions = [...allOptions, ...messageArray];
                     }
 
                     const htmlMessages = allOptions.map(option => option.html);
